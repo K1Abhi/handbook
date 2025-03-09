@@ -17,3 +17,48 @@ we must reference the docker host
 ```java
 properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "host.docker.internal:9092");
 ```
+
+Simple JAVA producer to push code to Kafka 
+```java
+package first;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
+import java.util.Properties;
+
+public class ProducerDemo {
+
+    private static final Logger log = LoggerFactory.getLogger(ProducerDemo.class.getSimpleName());
+
+    public static void main(String[] args) {
+        log.info("Hello world !!");
+
+        //Properties Producer Properties
+        Properties properties = new Properties();
+        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "host.docker.internal:9092");
+        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        //Create producer
+        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
+
+        //create a procuerRecord =
+        ProducerRecord<String, String> producerRecord =
+                new ProducerRecord<>("demo_java","Hello world Nice weekend");
+
+        // send the data - asynchronus
+        producer.send(producerRecord);
+
+        // flush data
+        producer.flush();
+
+        // flush and close producer
+        producer.close();
+    }
+}
+```
