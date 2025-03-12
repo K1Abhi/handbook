@@ -135,3 +135,49 @@ public class ProducerDemoWithCallback {
 }
 ```
 
+This part below is the is an asynchronous Kafka producer callback in Java that handles the result of sending a message to a Kafka topic.
+```java
+producer.send(producerRecord, new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                if (e == null){
+                    log.info("Received new metadata \n" +
+                            "Topic: " + recordMetadata.topic() + "\n" +
+                            "Partition: " + recordMetadata.partition() + "\n" +
+                            "Offset: " + recordMetadata.offset() + "\n" +
+                            "Timestamp: " + recordMetadata.timestamp()
+                    );
+                }
+                else {
+                    log.error("Error while producing: ",e);
+                }
+            }
+        });
+```
+#### Breaking It Down
+1. Asynchronous Sending `(producer.send(producerRecord, callback))`
+- The `send(` method sends a Kafka message `(producerRecord)` asynchronously.
+- The second parameter is a Callback, which executes once Kafka processes the message.
+
+2. Handling Success and Failure (onCompletion)
+- The `onCompletion()` method is called when Kafka acknowledges the message (whether successfully or with an error).
+- It has two parameters:
+    - `recordMetadata`: Contains metadata about the sent record if it was successful.
+    - `e`: Contains an exception if an error occurred.
+
+3. Success Case `(e == null)`
+- If e is null, the message was successfully sent.
+- It logs metadata of the record:
+    - `recordMetadata.topic()`: The topic where the message was published.
+    - `recordMetadata.partition()`: The partition where the message landed.
+    - `recordMetadata.offset()`: The offset of the message in the partition.
+    - `recordMetadata.timestamp()`: The timestamp when Kafka stored the message.
+
+4. Failure Case `(e != null)`
+    - If e is not null, there was an error.
+    - It logs the error using `log.error("Error while producing: ", e);`
+
+#### Why Use a Callback?
+- Kafka's `send()` method is asynchronous, meaning it does not block execution.
+- The callback ensures that we get notified when the message is successfully sent or encounters an error.
+- This is useful for error handling, monitoring, and debugging Kafka producers.
