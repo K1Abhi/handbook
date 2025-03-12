@@ -181,3 +181,40 @@ producer.send(producerRecord, new Callback() {
 - Kafka's `send()` method is asynchronous, meaning it does not block execution.
 - The callback ensures that we get notified when the message is successfully sent or encounters an error.
 - This is useful for error handling, monitoring, and debugging Kafka producers.
+- 
+
+### 3. JAVA Producer: JAPA API - with Keys
+
+```java
+for (int i=0; i<10; i++){
+
+            String topic = "demo_java";
+            String value = "Abhishek you are slow " + i;
+            String key = "id_"+i;
+
+            //create a ProduerRecord
+            ProducerRecord<String, String> producerRecord =
+                    new ProducerRecord<>("demo_java", key, value);
+
+            // send the data - asynchronus
+            producer.send(producerRecord, new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                    if (e == null){
+                        log.info("Received new metadata \n" +
+                                "Key: " + producerRecord.key() + "\n" +
+                                "Partition: " + recordMetadata.partition() + "\n"
+                        );
+                    }
+                    else {
+                        log.error("Error while producing: ",e);
+                    }
+                }
+            });
+        }
+```
+We are sending the data to Kafka with keys 
+```java
+ProducerRecord<String, String> producerRecord =
+                    new ProducerRecord<>("demo_java", key, value);
+```
