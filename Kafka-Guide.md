@@ -155,17 +155,17 @@ producer.send(producerRecord, new Callback() {
         });
 ```
 #### Breaking It Down
-1. Asynchronous Sending `(producer.send(producerRecord, callback))`
+**1. Asynchronous Sending `(producer.send(producerRecord, callback))`**
 - The `send(` method sends a Kafka message `(producerRecord)` asynchronously.
 - The second parameter is a Callback, which executes once Kafka processes the message.
 
-2. Handling Success and Failure (onCompletion)
+**2. Handling Success and Failure (onCompletion)**
 - The `onCompletion()` method is called when Kafka acknowledges the message (whether successfully or with an error).
 - It has two parameters:
     - `recordMetadata`: Contains metadata about the sent record if it was successful.
     - `e`: Contains an exception if an error occurred.
 
-3. Success Case `(e == null)`
+**3. Success Case `(e == null)`**
 - If e is null, the message was successfully sent.
 - It logs metadata of the record:
     - `recordMetadata.topic()`: The topic where the message was published.
@@ -173,7 +173,7 @@ producer.send(producerRecord, new Callback() {
     - `recordMetadata.offset()`: The offset of the message in the partition.
     - `recordMetadata.timestamp()`: The timestamp when Kafka stored the message.
 
-4. Failure Case `(e != null)`
+**4. Failure Case `(e != null)`**
     - If e is not null, there was an error.
     - It logs the error using `log.error("Error while producing: ", e);`
 
