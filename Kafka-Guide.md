@@ -19,6 +19,13 @@ properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "host.docker.int
 ```
 
 Simple JAVA producer to push code to Kafka 
+
+
+
+## JAVA Programming 101 
+
+### 1. Java Producer
+A simple java producer that sends data to java producer 
 ```java
 package first;
 
