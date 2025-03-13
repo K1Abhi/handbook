@@ -218,3 +218,69 @@ We are sending the data to Kafka with keys
 ProducerRecord<String, String> producerRecord =
                     new ProducerRecord<>("demo_java", key, value);
 ```
+--
+
+### JAVA Consumer 
+
+```java
+package first;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Properties;
+
+public class ConssumerDemo {
+
+    private static final Logger log = LoggerFactory.getLogger(ConssumerDemo.class.getSimpleName());
+
+    public static void main(String[] args) {
+
+        String bootstrapServer = "host.docker.internal:9092";
+        String topic = "demo_java";
+        String groupID = "my_group_id";
+
+
+        // create consumer config
+        Properties properties = new Properties();
+        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
+        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupID);
+        properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        // Kafka Consumer
+        KafkaConsumer<String, String>  consumer = new KafkaConsumer<>(properties);
+
+        // Subscribe Consumer to out topic(s)
+        consumer.subscribe(Arrays.asList(topic));
+
+        // Poll for new data
+
+        while(true){
+
+            log.info("Polling");
+
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+
+            for(ConsumerRecord<String, String> record: records) {
+                log.info("Key: " + record.key() + "Value" + record.value());
+                log.info("partition: "+ record.partition() + "Offset: " + record.partition());
+
+            }
+
+
+        }
+
+        }
+
+    }
+```
