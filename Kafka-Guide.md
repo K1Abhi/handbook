@@ -218,9 +218,9 @@ We are sending the data to Kafka with keys
 ProducerRecord<String, String> producerRecord =
                     new ProducerRecord<>("demo_java", key, value);
 ```
---
+---
 
-### JAVA Consumer 
+### 3. JAVA Consumer 
 
 ```java
 package first;
