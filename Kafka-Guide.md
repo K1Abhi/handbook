@@ -284,3 +284,174 @@ public class ConssumerDemo {
 
     }
 ```
+
+
+### 5. JAVA Consumer with Graceful Shutdown 
+
+```java
+package first;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.WakeupException;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Properties;
+
+public class ConssumerDemoWithShutdown {
+
+    private static final Logger log = LoggerFactory.getLogger(ConssumerDemoWithShutdown.class.getSimpleName());
+
+    public static void main(String[] args) {
+
+        String bootstrapServer = "host.docker.internal:9092";
+        String topic = "demo_java";
+        String groupID = "my_third_application";
+
+
+        // create consumer config
+        Properties properties = new Properties();
+        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
+        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupID);
+        properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        // Kafka Consumer
+        KafkaConsumer<String, String>  consumer = new KafkaConsumer<>(properties);
+
+        //get a reference to the current thread
+        final Thread mainThread = Thread.currentThread();
+
+        //adding the shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            public void run() {
+                log.info("Detected a shutdown, let's exit by calling consumer.wakeup()....");
+                consumer.wakeup();
+
+                //join the main thread to allow the execution of the code in the main thread
+                try {
+                    mainThread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        try {
+
+            //get a reference to the current thread as shutdown hook will run in different thread
+            // Subscribe Consumer to out topic(s)
+            consumer.subscribe(Arrays.asList(topic));
+
+            // Poll for new data
+            while(true){
+
+                log.info("Polling");
+
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+
+                for(ConsumerRecord<String, String> record: records) {
+                    log.info("Key: " + record.key() + "Value" + record.value());
+                    log.info("partition: "+ record.partition() + "Offset: " + record.partition());
+
+                }
+            }
+        } catch (WakeupException e) {
+            log.info("Wake up exception !");
+            //We ignore this as this is an expected exception when closing a consumer
+        } catch (Exception e){
+            log.error("Unexpected exception");
+        } finally {
+            consumer.close();
+            log.info("The consumer is now gracefully closed");
+        }
+
+
+    }
+}
+```
+This implementation ensures that the Kafka consumer shuts down cleanly when the application is stopped, preventing resource leaks and handling consumer group rebalancing properly.
+
+#### 1. Setup Kafka Consumer & Configuration
+```java
+KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+```
+Initializes a Kafka consumer with the given properties.
+
+#### 2.Get a Reference to the Main Thread
+```java
+final Thread mainThread = Thread.currentThread();
+```
+Stores a reference to the main thread so we can safely handle shutdown logic.
+
+#### 3. Add a Shutdown Hook
+```java
+Runtime.getRuntime().addShutdownHook(new Thread(){
+    public void run() {
+        log.info("Detected a shutdown, let's exit by calling consumer.wakeup()....");
+        consumer.wakeup(); // Interrupts consumer.poll()
+
+        try {
+            mainThread.join(); // Ensures main thread finishes execution before exiting
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+});
+```
+**What is a Shutdown Hook?**
+- It's a special thread that runs when the JVM is shutting down (e.g., when the app is stopped using CTRL+C or kill command).
+- The shutdown hook calls `consumer.wakeup()`, which interrupts `consumer.poll()`.
+
+**Why Call `consumer.wakeup()`?**
+- `consumer.poll()` is a blocking call, so if we don’t wake it up, it might hang indefinitely.
+- The WakeupException allows the program to exit gracefully.
+
+#### 4. Start the Consumer Loop
+```java
+while (true) {
+    log.info("Polling");
+    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+
+    for (ConsumerRecord<String, String> record : records) {
+        log.info("Key: " + record.key() + " Value: " + record.value());
+        log.info("Partition: " + record.partition() + " Offset: " + record.offset());
+    }
+}
+```
+- This keeps polling for new messages until the shutdown signal is received.
+  
+#### 5. Catch WakeupException to Stop the Consumer
+```java
+} catch (WakeupException e) {
+    log.info("Wake up exception !");
+    // Expected exception when closing consumer, so we ignore it.
+} catch (Exception e){
+    log.error("Unexpected exception", e);
+}
+```
+- `WakeupException` is thrown when `consumer.wakeup()` is called.
+- This is expected behavior, so we catch and ignore it.
+- Any other exceptions are logged as errors.
+
+#### 6. Close the Consumer Properly
+```java
+} finally {
+    consumer.close();
+    log.info("The consumer is now gracefully closed");
+}
+```
+- `consumer.close()` ensures:
+    - The consumer leaves the consumer group properly.
+    - Commits offsets (if using auto-commit).
+    - Releases resources.
+
+
+
