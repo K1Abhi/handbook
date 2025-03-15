@@ -220,7 +220,7 @@ ProducerRecord<String, String> producerRecord =
 ```
 ---
 
-### 3. JAVA Consumer 
+### 4. JAVA Consumer with Polling
 
 ```java
 package first;
