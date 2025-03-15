@@ -284,7 +284,7 @@ public class ConssumerDemo {
 
     }
 ```
-
+---
 
 ### 5. JAVA Consumer with Graceful Shutdown 
 
