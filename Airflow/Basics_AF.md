@@ -1,6 +1,6 @@
 ## Waiting for Multiple Files 
 
-Prducer Code that waits for multiple files 
+Prducer Code that waits producers/updates two datasets my_file & my_file_2
 
 ```python
 from airflow import DAG, Dataset
