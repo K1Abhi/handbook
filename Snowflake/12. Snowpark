@@ -18,3 +18,14 @@ The main goal is to push business logic to where the data lives—inside Snowfla
 - With Snowpark, you instead send your logic to Snowflake, and it’s executed on the same infrastructure where your data lives.
 - This reduces latency, cost, and bandwidth usage.
 
+
+
+
+
+
+
+
+
+
+
+
